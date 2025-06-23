@@ -1,9 +1,17 @@
 name: Scraping Horarios SIAU
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+    inputs:
+      username:
+        description: 'Usuario de inicio de sesión'
+        required: true
+      password:
+        description: 'Contraseña del sistema'
+        required: true
+      base-url:
+        description: 'URL base del sistema'
+        required: true
 
 jobs:
   scrape:
@@ -19,6 +27,6 @@ jobs:
       - name: Ejecutar acción personalizada de scraping
         uses: ./.github/actions/scrapeSchedules
         with:
-          username: ${{ secrets.SIAU_USR }}
-          password: ${{ secrets.SIAU_PWD }}
-          base-url: ${{ secrets.SIAU_URL }}
+          username: ${{ github.event.inputs.username }}
+          password: ${{ github.event.inputs.password }}
+          base-url: ${{ github.event.inputs['base-url'] }}

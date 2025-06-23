@@ -30,6 +30,14 @@ jobs:
         working-directory: .github/scripts/scraper
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('.github/scripts/scraper/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Instalar navegador Chromium de Playwright
         working-directory: .github/scripts/scraper
         run: npx playwright install chromium

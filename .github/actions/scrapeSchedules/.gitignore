@@ -1,3 +1,0 @@
-# .github/actions/scrapeSchedules/.gitignore
-node_modules/
-.cache/

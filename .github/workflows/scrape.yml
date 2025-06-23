@@ -4,13 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       username:
-        description: 'Usuario de inicio de sesión'
+        description: "Usuario de inicio de sesión"
         required: true
       password:
-        description: 'Contraseña del sistema'
+        description: "Contraseña del sistema"
         required: true
       base-url:
-        description: 'URL base del sistema'
+        description: "URL base del sistema"
         required: true
 
 jobs:
@@ -21,12 +21,23 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
 
-      - name: Instalar navegador Chromium
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Instalar dependencias del scraper
+        working-directory: .github/scripts/scraper
+        run: npm ci
+
+      - name: Instalar navegador Chromium de Playwright
+        working-directory: .github/scripts/scraper
         run: npx playwright install chromium
 
-      - name: Ejecutar acción personalizada de scraping
-        uses: ./.github/actions/scrapeSchedules
-        with:
-          username: ${{ github.event.inputs.username }}
-          password: ${{ github.event.inputs.password }}
-          base-url: ${{ github.event.inputs['base-url'] }}
+      - name: Ejecutar script de scraping
+        working-directory: .github/scripts/scraper
+        run: node index.js
+        env:
+          SIAU_USR: ${{ inputs.username }}
+          SIAU_PWD: ${{ inputs.password }}
+          SIAU_URL: ${{ inputs['base-url'] }}

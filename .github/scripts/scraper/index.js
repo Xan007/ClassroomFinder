@@ -1,5 +1,6 @@
 const core = require('@actions/core');
 const { chromium } = require('playwright');
+const fs = require('fs');
 require('dotenv').config();
 
 (async () => {
@@ -10,6 +11,8 @@ require('dotenv').config();
   let isLoggedIn = false;
   let page = null;
   let browser = null;
+
+  const scrapingQueue = [];
 
   try {
     browser = await chromium.launch({ headless: true });
@@ -22,6 +25,7 @@ require('dotenv').config();
       return route.continue();
     });
 
+    // Login
     await page.goto(`${baseUrl}/ORION/Login`);
     await page.fill('#usr', usuario);
     await page.fill('#pwd', contrasena);
@@ -35,10 +39,10 @@ require('dotenv').config();
     }
 
     isLoggedIn = true;
-
     core.info('✅ Login exitoso');
+
+    // Navegar a HorarioGeneral
     await page.goto(`${baseUrl}/ORION/HorarioGeneral`);
-  
     await page.waitForSelector('select#facultad');
 
     const facultades = await page.$$eval('select#facultad > option', options =>
@@ -47,24 +51,49 @@ require('dotenv').config();
 
     for (const facultad of facultades) {
       await page.selectOption('select#facultad', facultad.value);
+      const facultadCode = facultad.value;
 
       const programas = await page.$$eval('select#programa1 > option', options =>
         options.map(o => ({ value: o.value, label: o.textContent.trim() })).filter(o => o.value !== '0')
       );
 
       for (const programa of programas) {
-        await page.selectOption('select#programa1', programa.value);
+        const [pensumCode, duracionSemestres] = programa.value.split(' ');
+        const programaLabel = programa.label;
 
-        const numeroSemestres = programa.value.split(' ')[1] || '?';
-        core.info(`📚 ${facultad.label} > ${programa.label} > ${numeroSemestres} Semestres`);
+        for (let semestre = 1; semestre <= parseInt(duracionSemestres, 10); semestre++) {
+          const url = `${baseUrl}/ORION/Ajax2?value=HorarioGeneral&content=${facultadCode},${pensumCode},${duracionSemestres},${semestre}`;
+
+          scrapingQueue.push({
+            url: url,
+            facultad: facultad.label,
+            facultadCode: facultadCode,
+            programa: programaLabel,
+            pensumCode: pensumCode,
+            duracion: duracionSemestres
+          });
+        }
       }
-    } 
+    }
 
-    core.info('✅ Scraping finalizado');
+    core.info(`🔄 Total de URLs construidas: ${scrapingQueue.length}`);
+
+    await page.clearCookies();
+
+    const datosFinales = [];
+    for (const entry of scrapingQueue) {
+      core.info(`✅ Extraído: ${entry.facultad} > ${entry.programa} > Semestre ${entry.semestre}`);
+
+      page.goto(entry.url);
+    }
+
+    core.info(`🎉 Se extrajeron ${datosFinales.length} entradas.`);
+    console.log(JSON.stringify(datosFinales, null, 2));
+
   } catch (error) {
     core.setFailed(`❌ Error en el scraping: ${error.message}`);
   } finally {
-    if (page && page.isClosed() === false) {
+    if (page && !page.isClosed()) {
       try {
         await page.goto(`${baseUrl}/ORION/Logout`, { timeout: 3000 });
         core.info('🔒 Logout exitoso');

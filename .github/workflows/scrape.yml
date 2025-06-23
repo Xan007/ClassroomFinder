@@ -1,0 +1,24 @@
+name: Scraping Horarios SIAU
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar navegador Chromium
+        run: npx playwright install chromium
+
+      - name: Ejecutar acción personalizada de scraping
+        uses: ./.github/actions/scrapeSchedules
+        with:
+          username: ${{ secrets.SIAU_USR }}
+          password: ${{ secrets.SIAU_PWD }}
+          base-url: ${{ secrets.SIAU_URL }}

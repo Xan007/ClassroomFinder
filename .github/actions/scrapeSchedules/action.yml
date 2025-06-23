@@ -1,0 +1,16 @@
+name: Scrape Horarios
+description: Scrapea todos los horarios académicos
+inputs:
+  username:
+    description: Usuario de inicio de sesión
+    required: true
+  password:
+    description: Contraseña del sistema
+    required: true
+  base-url:
+    description: URL base del sistema
+    required: true
+
+runs:
+  using: "node16"
+  main: "dist/index.js"

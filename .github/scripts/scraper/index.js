@@ -78,7 +78,7 @@ require('dotenv').config();
 
     core.info(`🔄 Total de URLs construidas: ${scrapingQueue.length}`);
 
-    await page.clearCookies();
+    await page.context().clearCookies();
 
     const datosFinales = [];
     for (const entry of scrapingQueue) {

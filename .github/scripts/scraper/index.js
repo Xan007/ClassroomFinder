@@ -82,7 +82,7 @@ require('dotenv').config();
 
     const datosFinales = [];
     for (const entry of scrapingQueue) {
-      core.info(`✅ Extraído: ${entry.facultad} > ${entry.programa} > Semestre ${entry.semestre}`);
+      core.info(`✅ Extraído: ${entry.facultad} > ${entry.programa} > Semestre ${entry.duracion}`);
 
       page.goto(entry.url);
     }
